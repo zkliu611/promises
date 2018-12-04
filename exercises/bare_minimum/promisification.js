@@ -61,17 +61,7 @@ var readFileAndMakeItFunny = function(filePath, callback) {
 };
 
 var readFileAndMakeItFunnyAsync = (filePath) => {
-  let promise1 = new Promise((resolve, reject) => {
-    readFileAndMakeItFunny(filePath, (err, success) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(success);
-      }
-    });
-  });
-
-  return promise1;
+  return Promise.promisify(readFileAndMakeItFunny)(filePath);
 };
 
 // Export these functions so we can test them and reuse them in later exercises
