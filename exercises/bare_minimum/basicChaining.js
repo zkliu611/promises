@@ -10,33 +10,24 @@
 
 var fs = require('fs');
 var Promise = require('bluebird');
-const { getGitHubProfileAsync } = require('./promisification');
-
+var request = require('request');
 
 var fetchProfileAndWriteToFile = function(readFilePath, writeFilePath) {
-  return getGitHubProfileAsync(user)
-    .then((body) => {
-      console.log(body);
+  return Promise.promisify(fs.readFile)(readFilePath, 'utf8')
+    .then(body => {
+      var options = {
+        url: 'https://api.github.com/users/',
+        headers: { 'User-Agent': 'request' },
+        json: true  // will JSON.parse(body) for us
+      };
+      let githubHandle = body.split('\n')[0];
+      options.url += githubHandle;
+      return Promise.promisify(request.get)(options);
     })
-    .catch((err) => {
-      throw new Error('User already exists!')
+    .then((res) => {
+      return Promise.promisify(fs.writeFile)(writeFilePath, JSON.stringify(res.body));
     });
 };
-
-return db.findUserInDatabaseAsync(user)
-    .then(function(existingUser) {
-      if (existingUser) {
-        throw new Error('User already exists!') // Head straight to `catch`. Do not pass Go, do not collect $200
-      } else {
-        return user; // Return a synchronous value
-      }
-    })
-    .then(function(newUser) {
-      return db.hashPasswordAsync(newUser) // Return a promise
-    })
-    .then(function(securedUser) {
-      return db.createAndSaveUserAsync(securedUser) // Return another promise
-    })
 
 // Export these functions so we can test them
 module.exports = {
